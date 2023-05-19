@@ -10,7 +10,7 @@ export const LeftNav = (props: PropsWithChildren) => {
           <ul className="list-reset flex flex-row px-1 pt-3 text-center md:flex-col md:px-2 md:py-3 md:text-left">
             <li className="mr-3 flex-1">
               <a
-                href="#"
+                href="/"
                 className="block border-b-2 border-pink-500 py-1 pl-1 align-middle text-white no-underline hover:text-white md:py-3"
               >
                 <i className="fas fa-tasks pr-0 md:pr-3"></i>
@@ -32,7 +32,7 @@ export const LeftNav = (props: PropsWithChildren) => {
             </li>
             <li className="mr-3 flex-1">
               <a
-                href="#"
+                href="/disclosures"
                 className="block border-b-2 border-gray-800 py-1 pl-1 align-middle text-white no-underline hover:border-blue-600 hover:text-white md:py-3"
               >
                 <i className="fas fa-chart-area pr-0 text-blue-600 md:pr-3"></i>
