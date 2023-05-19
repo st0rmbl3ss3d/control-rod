@@ -2,41 +2,31 @@ import { type NextPage } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
 import { signIn, signOut, useSession } from 'next-auth/react';
-
+import { severity, type finding } from '~/shared/finding';
 import { api } from '~/utils/api';
-import React from 'react';
-function createCompareFn<T extends object>(
-  property: keyof T,
-  sort_order: 'asc' | 'desc'
-) {
-  const compareFn = (a: T, b: T) => {
-    const val1 = a[property];
-    const val2 = b[property];
-    const order = sort_order !== 'desc' ? 1 : -1;
+import { useAtom } from 'jotai';
+import { atomSearch } from '~/shared/atoms';
+import { createCompareFn } from '~/shared/helpers';
 
-    switch (typeof val1) {
-      case 'number': {
-        const valb = val2 as number;
-        const result = val1 - valb;
-        return result * order;
-      }
-      case 'string': {
-        const valb = val2 as string;
-        const result = val1.localeCompare(valb);
-        return result * order;
-      }
-      // add other cases like boolean, etc.
-      default:
-        return 0;
-    }
+function createFilterFn<T extends finding>(query: string) {
+  const filterFn = (f: finding, index: number, array: finding[]) => {
+    const lowerQuery = query.toLowerCase();
+    return (
+      //inexplicably, one of the findings had no description, so check for all params before doing string compares
+      (f.name && f.name.toLowerCase().includes(lowerQuery)) ||
+      (f.host && f.host.includes(lowerQuery)) ||
+      (f.severity && severity[f.severity].toLowerCase().includes(lowerQuery)) ||
+      (f.description && f.description.toLowerCase().includes(lowerQuery)) ||
+      (f.template && f.template.includes(lowerQuery))
+    );
   };
-  return compareFn;
+  return filterFn;
 }
+
 const Home: NextPage = () => {
-  const hello = api.example.hello.useQuery({ text: 'from tRPC' });
+  const [search] = useAtom(atomSearch);
   const { data: findings, status: findingsStatus } =
     api.findings.getFindings.useQuery();
-  const f2 = api.findings.getFindings.useQuery();
   return (
     <>
 
@@ -54,28 +44,61 @@ const Home: NextPage = () => {
             </thead>
             <tbody>
               {findings &&
-                findings.sort(createCompareFn('severity', 'asc')).map((f) => (
-                  <tr className="even:bg-white/5 " key={f.timestamp}>
-                    <td className="border border-y-0 border-l-0 border-gray-700">
-                      {f.name}
-                    </td>
-                    <td className="border border-y-0 border-l-0 border-gray-700">
-                      {f.severity}
-                    </td>
-                    <td className="border border-y-0 border-l-0 border-gray-700">
-                      {f.host}
-                    </td>
-                    <td className="border border-y-0 border-l-0 border-gray-700">
-                      {f.description}
-                    </td>
-                    <td className="border border-y-0 border-l-0 border-gray-700">
-                      {f.template}
-                    </td>
-                  </tr>
-                ))}
+                findings
+                  .sort(createCompareFn('severity', 'desc'))
+                  .filter(createFilterFn(search))
+                  .map((f) => (
+                    <tr className="even:bg-white/5 " key={f.timestamp}>
+                      <td className="border border-y-0 border-l-0 border-gray-700">
+                        {f.name}
+                      </td>
+                      <td className=" border border-y-0 border-l-0 border-gray-700 ">
+                        <span
+                          className={`${
+                            f.severity == severity.critical
+                              ? 'm-2 rounded bg-red-400 p-2'
+                              : ''
+                          }
+                        ${
+                          f.severity == severity.high
+                            ? 'm-2 rounded bg-orange-400 p-2'
+                            : ''
+                        }
+                        ${
+                          f.severity == severity.medium
+                            ? 'm-2 rounded bg-yellow-400 p-2 text-black'
+                            : ''
+                        }
+                         ${
+                           f.severity == severity.low
+                             ? 'm-2 rounded bg-green-400 p-2'
+                             : ''
+                         }
+                            ${
+                              f.severity == severity.info
+                                ? 'm-2 rounded bg-white p-2 text-black'
+                                : ''
+                            }
+                         `}
+                        >
+                          {severity[f.severity]}
+                        </span>
+                      </td>
+                      <td className="border border-y-0 border-l-0 border-gray-700">
+                        {f.host}
+                      </td>
+                      <td className="border border-y-0 border-l-0 border-gray-700">
+                        {f.description}
+                      </td>
+                      <td className="border border-y-0 border-l-0 border-gray-700">
+                        {f.template}
+                      </td>
+                    </tr>
+                  ))}
             </tbody>
           </table>
         </div>
+
         {findingsStatus && findingsStatus == 'loading' && (
           <button
             type="button"
@@ -106,9 +129,6 @@ const Home: NextPage = () => {
           </button>
         )}
         <div className="flex flex-col items-center gap-2">
-          <p className="text-2xl text-white">
-            {hello.data ? hello.data.greeting : 'Loading tRPC query...'}
-          </p>
           <AuthShowcase />
         </div>
       </div>

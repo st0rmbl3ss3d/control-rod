@@ -1,15 +1,19 @@
-import { type NextComponentType } from 'next';
-import { PropsWithChildren } from 'react';
 import { signIn, signOut, useSession } from 'next-auth/react';
+import { useAtom } from 'jotai';
 
-export const NavBar = (props: PropsWithChildren) => {
+import { useRef, useEffect } from 'react';
+import { atomSearch } from '~/shared/atoms';
+type Timer = ReturnType<typeof setTimeout>;
+type SomeFunction = (...args: any[]) => void;
+
+export const NavBar = () => {
   const { data: sessionData } = useSession();
-
+  const [search, setSearch] = useAtom(atomSearch);
   return (
     <header>
       <nav
         aria-label="menu nav"
-        className="fixed top-0 z-20 mt-0 h-auto w-full bg-gray-800 px-1 pb-1 pt-2 md:pt-1"
+        className="fixed top-0 z-10 mt-0 h-auto w-full bg-gray-800 px-1 pb-1 pt-2 md:pt-1"
       >
         <div className="flex flex-wrap items-center">
           <div className="flex flex-shrink  text-white md:w-48 ">
@@ -28,6 +32,8 @@ export const NavBar = (props: PropsWithChildren) => {
                 id="search"
                 placeholder="Search"
                 className="w-full appearance-none rounded border border-transparent bg-gray-900 px-2 py-3 pl-10 leading-normal text-white transition focus:border-gray-400 focus:outline-none"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
               />
               <div
                 className="search-icon absolute"
